@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Три года, Сяным</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&family=PT+Sans:wght@400;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0a1220;
+    --bg-deep2:#0e1b30;
+    --star-gold:#f0c987;
+    --star-gold-soft:#f0c98766;
+    --accent-blush:#f2a48c;
+    --text-cream:#f4efe6;
+    --text-muted:#93a0b5;
+    --line-teal:#456173;
+    --card-bg:#111f36;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at 50% 0%, var(--bg-deep2), var(--bg-deep) 70%);
+    color:var(--text-cream);
+    font-family:'PT Sans', sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  /* ambient stars */
+  #starfield{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+  }
+
+  .wrap{position:relative; z-index:2; max-width:1000px; margin:0 auto; padding:0 24px 120px;}
+
+  header{
+    text-align:center;
+    padding:90px 20px 40px;
+  }
+  .eyebrow{
+    font-family:'Caveat', cursive;
+    font-size:1.5rem;
+    color:var(--accent-blush);
+    letter-spacing:0.5px;
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    font-weight:600;
+    font-size:clamp(2.2rem, 6vw, 4rem);
+    margin:0 0 18px;
+    line-height:1.1;
+    background:linear-gradient(180deg, var(--text-cream), var(--star-gold));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .sub{
+    color:var(--text-muted);
+    font-size:1.05rem;
+    max-width:560px;
+    margin:0 auto;
+    line-height:1.6;
+  }
+
+  /* constellation map */
+  .constellation-section{
+    position:relative;
+    margin:20px auto 60px;
+  }
+  svg#lines{
+    position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none;
+  }
+  .lines-path{
+    fill:none;
+    stroke:var(--star-gold);
+    stroke-width:1.4;
+    stroke-linecap:round;
+    opacity:0.55;
+    filter:drop-shadow(0 0 3px var(--star-gold-soft));
+  }
+
+  .stars-grid{
+    position:relative;
+    z-index:2;
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:50px 20px;
+    padding:40px 0 20px;
+  }
+  @media (max-width:720px){
+    .stars-grid{grid-template-columns:repeat(2,1fr); gap:40px 10px;}
+  }
+
+  .star-node{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    cursor:pointer;
+    background:none;
+    border:none;
+    color:inherit;
+    font-family:inherit;
+    padding:10px;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+    position:relative;
+    z-index:3;
+  }
+  .star-icon{
+    width:34px; height:34px;
+    margin-bottom:14px;
+    transition:transform .35s ease, filter .35s ease;
+    filter:drop-shadow(0 0 4px var(--star-gold-soft));
+  }
+  .star-node:hover .star-icon, .star-node:focus-visible .star-icon{
+    transform:scale(1.25) rotate(8deg);
+  }
+  .star-node.opened .star-icon{
+    fill:var(--star-gold);
+  }
+  .star-node:not(.opened) .star-icon{
+    fill:#40506a;
+    filter:none;
+  }
+  .star-label{
+    font-family:'Caveat', cursive;
+    font-size:1.15rem;
+    color:var(--text-muted);
+    margin-bottom:4px;
+  }
+  .star-title{
+    font-size:0.92rem;
+    font-weight:700;
+    letter-spacing:0.3px;
+    color:var(--text-cream);
+    max-width:140px;
+  }
+  .star-node:not(.opened) .star-title{color:var(--text-muted);}
+
+  /* overlay */
+  #overlay{
+    position:fixed; inset:0; z-index:9999;
+    background:rgba(6,10,20,0.92);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    -webkit-overflow-scrolling:touch;
+  }
+  #overlay.show{display:flex;}
+  .card{
+    background:var(--card-bg);
+    border:1px solid #26385222;
+    border-radius:18px;
+    max-width:640px;
+    width:100%;
+    max-height:86vh;
+    overflow-y:auto;
+    padding:44px 40px 40px;
+    position:relative;
+    box-shadow:0 30px 80px rgba(0,0,0,0.5);
+    animation:rise .4s ease;
+  }
+  @keyframes rise{
+    from{opacity:0; transform:translateY(18px) scale(0.98);}
+    to{opacity:1; transform:translateY(0) scale(1);}
+  }
+  .card .chapter-eyebrow{
+    font-family:'Caveat', cursive;
+    color:var(--accent-blush);
+    font-size:1.3rem;
+    margin-bottom:2px;
+  }
+  .card h2{
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    font-size:1.9rem;
+    margin:0 0 22px;
+    color:var(--star-gold);
+  }
+  .card p{
+    line-height:1.85;
+    font-size:1.02rem;
+    color:var(--text-cream);
+    margin:0 0 16px;
+  }
+  .photo-slot{
+    border:1.5px dashed #4a5d76;
+    border-radius:12px;
+    padding:26px 16px;
+    text-align:center;
+    color:var(--text-muted);
+    font-size:0.9rem;
+    margin:18px 0 24px;
+    font-family:'Caveat', cursive;
+    font-size:1.15rem;
+  }
+  .close-btn{
+    position:absolute;
+    top:18px; right:18px;
+    background:none;
+    border:none;
+    color:var(--text-muted);
+    font-size:1.6rem;
+    cursor:pointer;
+    line-height:1;
+    padding:4px 8px;
+  }
+  .close-btn:hover{color:var(--text-cream);}
+
+  /* final section */
+  .finale{
+    text-align:center;
+    margin-top:60px;
+    padding-top:40px;
+    border-top:1px solid #26385255;
+  }
+  .finale-note{
+    font-family:'Caveat', cursive;
+    font-size:1.3rem;
+    color:var(--text-muted);
+    margin-bottom:20px;
+  }
+  .progress-track{
+    max-width:320px;
+    margin:0 auto 30px;
+    height:4px;
+    background:#233450;
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--accent-blush), var(--star-gold));
+    transition:width .5s ease;
+  }
+  .music-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    background:transparent;
+    border:1px solid #4a5d76;
+    color:var(--text-cream);
+    padding:12px 22px;
+    border-radius:999px;
+    font-family:'PT Sans', sans-serif;
+    font-size:0.95rem;
+    cursor:pointer;
+    transition:all .25s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .music-btn:hover, .music-btn.playing{border-color:var(--star-gold); color:var(--star-gold);}
+
+  footer{
+    text-align:center;
+    color:var(--text-muted);
+    font-size:0.85rem;
+    padding:40px 20px 10px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">три года спустя</div>
+    <h1>Наше созвездие</h1>
+    <p class="sub">Каждая звезда здесь — момент, который сделал нас нами. Нажимай по одной — и смотри, как вместе они складываются в историю.</p>
+  </header>
+
+  <div class="constellation-section">
+    <svg id="lines"><path class="lines-path" id="linesPath" d=""/></svg>
+    <div class="stars-grid" id="starsGrid"></div>
+  </div>
+
+  <div class="finale">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="finale-note" id="finaleNote">открыто 0 из 9 звёзд</div>
+    <audio id="bgm" src="sunsetz.mp3" loop preload="none"></audio>
+    <button class="music-btn" id="musicBtn" onclick="toggleMusic()">
+      ♪ включить Sunsetz
+    </button>
+  </div>
+
+  <footer>для Ризы, от любимого</footer>
+</div>
+
+<div id="overlay">
+  <div class="card" id="cardContent"></div>
+</div>
+
+<script>
+const chapters = [
+  {
+    label:"глава первая",
+    title:"Школьные коридоры",
+    text:[
+      "Мы знали друг друга ещё со школы. Не близко — просто здоровались, проходя мимо в коридоре, перекидывались парой слов и расходились каждый по своим делам.",
+      "Ты тогда даже не подозревала, сколько раз я украдкой ловил твой взгляд и как долго он потом не отпускал меня."
+    ],
+    photo:"фото: школьные годы"
+  },
+  {
+    label:"глава вторая",
+    title:"Наш вальс",
+    text:[
+      "Потом настал выпускной. Наш вальс. Я до сих пор, закрывая глаза, могу восстановить каждую секунду — как ты шутила, пока мы кружились по залу, как искрились твои глаза, будто в них уместился весь свет того вечера.",
+      "Мы были открыты друг другу с самой первой секунды, будто уже тогда, без единого слова, что-то для себя решили."
+    ],
+    photo:"фото: выпускной вальс"
+  },
+  {
+    label:"глава третья",
+    title:"Ты прыгала от счастья",
+    text:[
+      "После выпускного мы гуляли всем классом по Алматы. И вот этот момент врезался в меня навсегда — ты прыгала от счастья в своей юбочке, лёгкая и невесомая, как облако, до краёв наполненное счастьем и любовью.",
+      "Знаешь, я до сих пор вижу тебя именно такой. Сколько бы времени ни прошло — ничего не изменилось."
+    ],
+    photo:"фото: прогулка после выпускного"
+  },
+  {
+    label:"глава четвёртая",
+    title:"Ночи на лавочке",
+    text:[
+      "А потом были ночи на лавочке. Мы тогда были просто друзьями — ещё ничего не начиналось, ещё ни один из нас не решался произнести вслух то, что чувствовал.",
+      "Но мы могли болтать сутками напролёт, забывая про время, про сон, про всё на свете. Я рассказывал тебе всё, что было внутри, а ты — мне, и каждый раз казалось, что мы только начали, хотя проходили часы.",
+      "Это были разговоры, после которых я шёл домой и понимал: что-то в моей жизни уже никогда не будет прежним."
+    ],
+    photo:"фото: та самая лавочка"
+  },
+  {
+    label:"глава пятая",
+    title:"Капчагай",
+    text:[
+      "И уже потом случилось Капчагайское — наше первое настоящее свидание. Это было по-детски бомбически, наивно и абсолютно настоящее.",
+      "Я помню каждую минуту того дня под Cigarettes After Sex — как будто эта музыка написана специально для нас двоих, для того лета, для того самого дня."
+    ],
+    photo:"фото: Капчагай"
+  },
+  {
+    label:"глава шестая",
+    title:"Три вещи, за которые я люблю тебя",
+    text:[
+      "Первое — твоя мудрость. Ты смотришь на пять шагов вперёд, продумываешь любой сценарий, взвешиваешь то, о чём я даже не успел подумать. Рядом с тобой я чувствую, что за нас есть кому подумать головой, а не только сердцем.",
+      "Второе — твоя забота и понимание. Ты слушаешь и понимаешь без слов — не нужно просить, объяснять, доказывать. Ты просто знаешь.",
+      "Третье — твои счастливые глаза. Как они светятся, когда у тебя всё хорошо. Честно, я физически не способен не улыбнуться, когда вижу тебя такой.",
+      "И ещё — когда ты переживаешь за меня, как за маленьким ребёнком, у меня внутри просыпаются бабочки. А когда пытаешься решить проблемы, которые мне мешают жить, даже зная, что не всё решается — это невероятно трогательно. Так же, как и то, как ты даришь близким людям самые лучшие подарки, о которых никто даже не мечтал."
+    ],
+    photo:"фото: твои счастливые глаза"
+  },
+  {
+    label:"глава седьмая",
+    title:"Испытание расстоянием",
+    text:[
+      "Был период, когда ты училась в Корее. Мы часто ругались тогда — не умели по-настоящему высказаться друг другу, не слышали, а просто говорили одновременно, каждый о своём.",
+      "Это было тяжело. Но мы прошли через это испытание расстоянием и недопониманием — и вышли из него только сильнее и крепче, чем были раньше."
+    ],
+    photo:"фото: письма и звонки"
+  },
+  {
+    label:"глава восьмая",
+    title:"Твоя паста",
+    text:[
+      "У нас есть одна забавная привычка. Ты постоянно готовишь пасту — часто, с душой, для всех, кого любишь. А я в ресторанах всегда, без исключения, беру только пасту.",
+      "И почти никогда не ем твою — просто потому что ты готовишь её не специально для меня, а для всех сразу. Мелочь, а мне почему-то дорога."
+    ],
+    photo:"фото: паста на кухне"
+  },
+  {
+    label:"глава девятая",
+    title:"Дом, который мы построим",
+    text:[
+      "Я закрываю глаза и вижу наше будущее — не просто, а в деталях, как будто уже там побывал. Вижу большой светлый дом, который мы построили вдвоём, кирпичик за кирпичиком, начиная с нуля, с двух сердец и одной мечты на двоих.",
+      "Дом, наполненный смехом, теплом и запахом твоей пасты по выходным."
+    ],
+    photo:"фото: наш будущий дом"
+  }
+];
+
+const starsGrid = document.getElementById('starsGrid');
+const overlay = document.getElementById('overlay');
+const cardContent = document.getElementById('cardContent');
+const progressFill = document.getElementById('progressFill');
+const finaleNote = document.getElementById('finaleNote');
+const linesPath = document.getElementById('linesPath');
+
+let opened = new Set();
+
+const starSvg = `<svg class="star-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 L14.4 9.2 L22 9.2 L15.9 13.6 L18.2 21 L12 16.4 L5.8 21 L8.1 13.6 L2 9.2 L9.6 9.2 Z"/></svg>`;
+
+chapters.forEach((ch, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'star-node';
+  btn.setAttribute('data-index', i);
+  btn.innerHTML = `
+    ${starSvg}
+    <div class="star-label">${ch.label}</div>
+    <div class="star-title">${ch.title}</div>
+  `;
+  btn.addEventListener('click', () => openChapter(i));
+  starsGrid.appendChild(btn);
+});
+
+// final always-visible closing star
+const finalBtn = document.createElement('button');
+finalBtn.className = 'star-node';
+finalBtn.innerHTML = `${starSvg}<div class="star-label">финал</div><div class="star-title">С годовщиной</div>`;
+finalBtn.addEventListener('click', () => openFinal());
+starsGrid.appendChild(finalBtn);
+
+function openChapter(i){
+  opened.add(i);
+  updateProgress();
+  const nodes = document.querySelectorAll('.star-node');
+  nodes[i].classList.add('opened');
+
+  const ch = chapters[i];
+  cardContent.innerHTML = `
+    <button class="close-btn" onclick="closeCard()">&times;</button>
+    <div class="chapter-eyebrow">${ch.label}</div>
+    <h2>${ch.title}</h2>
+    <div class="photo-slot">📷 ${ch.photo}</div>
+    ${ch.text.map(p => `<p>${p}</p>`).join('')}
+  `;
+  overlay.classList.add('show');
+  drawLines();
+}
+
+function openFinal(){
+  const nodes = document.querySelectorAll('.star-node');
+  nodes[nodes.length-1].classList.add('opened');
+  cardContent.innerHTML = `
+    <button class="close-btn" onclick="closeCard()">&times;</button>
+    <div class="chapter-eyebrow">три года</div>
+    <h2>С годовщиной, Сяным</h2>
+    <p>Три года — это значит, что через все испытания жизни, через ссоры, расстояния, непонимание — мы каждый раз, снова и снова, выбирали друг друга.</p>
+    <p>Я люблю тебя. Сегодня, как и в тот вечер на вальсе. Как на лавочке. Как в Капчагае. И буду — в доме, который мы ещё построим.</p>
+  `;
+  overlay.classList.add('show');
+}
+
+function closeCard(){
+  overlay.classList.remove('show');
+}
+overlay.addEventListener('click', (e) => { if(e.target === overlay) closeCard(); });
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeCard(); });
+
+const bgm = document.getElementById('bgm');
+const musicBtn = document.getElementById('musicBtn');
+function toggleMusic(){
+  if(bgm.paused){
+    bgm.play().then(() => {
+      musicBtn.textContent = '⏸ Sunsetz играет...';
+      musicBtn.classList.add('playing');
+    }).catch(() => {
+      musicBtn.textContent = '⚠ добавь sunsetz.mp3 рядом с файлом';
+    });
+  } else {
+    bgm.pause();
+    musicBtn.textContent = '♪ включить Sunsetz';
+    musicBtn.classList.remove('playing');
+  }
+}
+
+function updateProgress(){
+  const pct = Math.round((opened.size / chapters.length) * 100);
+  progressFill.style.width = pct + '%';
+  finaleNote.textContent = `открыто ${opened.size} из ${chapters.length} звёзд`;
+}
+
+function drawLines(){
+  const nodes = Array.from(document.querySelectorAll('.star-node')).slice(0, chapters.length);
+  const openedSorted = Array.from(opened).sort((a,b)=>a-b);
+  if(openedSorted.length < 2){ linesPath.setAttribute('d',''); return; }
+  const gridRect = starsGrid.getBoundingClientRect();
+  let d = '';
+  openedSorted.forEach((idx, i) => {
+    const rect = nodes[idx].getBoundingClientRect();
+    const x = rect.left - gridRect.left + rect.width/2;
+    const y = rect.top - gridRect.top + 20;
+    d += (i === 0 ? 'M' : 'L') + x + ',' + y + ' ';
+  });
+  linesPath.setAttribute('d', d);
+}
+window.addEventListener('resize', drawLines);
+
+// ambient starfield canvas
+const canvas = document.getElementById('starfield');
+const ctx = canvas.getContext('2d');
+let stars = [];
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = document.body.scrollHeight;
+}
+function initStars(){
+  stars = [];
+  const count = Math.floor((canvas.width * canvas.height) / 9000);
+  for(let i=0;i<count;i++){
+    stars.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      r: Math.random()*1.3 + 0.3,
+      a: Math.random()*0.6 + 0.2,
+      speed: Math.random()*0.015 + 0.003
+    });
+  }
+}
+function drawStars(t){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  stars.forEach(s => {
+    const twinkle = s.a + Math.sin(t*s.speed + s.x) * 0.15;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(240,201,135,${Math.max(0,twinkle)})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+resizeCanvas();
+initStars();
+requestAnimationFrame(drawStars);
+window.addEventListener('resize', () => { resizeCanvas(); initStars(); });
+</script>
+
+</body>
+</html>
